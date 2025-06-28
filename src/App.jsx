@@ -347,14 +347,18 @@ function App() {
         const minSwipeDistance = 30; // Minimale pixelafstand voor een veeg om te registreren
         if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > minSwipeDistance) { // Horizontale veeg
             if (dx > 0) { // Naar rechts geveegd
+                event.preventDefault(); // Voorkom paginarollen
                 applyMove('right');
             } else { // Naar links geveegd
+                event.preventDefault(); // Voorkom paginarollen
                 applyMove('left');
             }
         } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > minSwipeDistance) { // Verticale veeg
             if (dy > 0) { // Naar beneden geveegd
+                event.preventDefault(); // Voorkom paginarollen
                 applyMove('down');
             } else { // Naar boven geveegd
+                event.preventDefault(); // Voorkom paginarollen
                 applyMove('up');
             }
         }
@@ -593,8 +597,8 @@ function App() {
                 }
             `}</style>
             <div className="game-container">
-                <h1>Elementen Samenvoegen</h1> {/* Translated */}
-                <div className="score">Score: {score}</div> {/* Translated */}
+                <h1>Elementen Samenvoegen</h1> 
+                <div className="score">Score: {score}</div> 
                 {/* Changed the .game-board's margin to 0 and centered via game-container's align-items */}
                 <div className="game-board">
                     {board.map((row, rowIndex) => (
@@ -605,14 +609,14 @@ function App() {
                         </div>
                     ))}
                 </div>
-                <p>Gebruik <strong>Pijltjestoetsen</strong> of <strong>Vegen</strong> om te spelen!</p> {/* Translated */}
-                <button className="new-game-button" onClick={handleNewGame}>Nieuw Spel</button> {/* Translated */}
+                <p>Gebruik <strong>Pijltjestoetsen</strong> of <strong>Vegen</strong> om te spelen!</p> 
+                <button className="new-game-button" onClick={handleNewGame}>Nieuw Spel</button> 
                 {isGameOver && (
                     <div className="game-over-overlay">
                         <div className="game-over-message">
-                            <h2>Spel Voorbij!</h2> {/* Translated */}
-                            <p>Je eindscore: {score}</p> {/* Translated */}
-                            <button onClick={handleNewGame}>Nieuw Spel</button> {/* Translated */}
+                            <h2>Spel Voorbij!</h2> 
+                            <p>Je eindscore: {score}</p> 
+                            <button onClick={handleNewGame}>Nieuw Spel</button> 
                         </div>
                     </div>
                 )}
