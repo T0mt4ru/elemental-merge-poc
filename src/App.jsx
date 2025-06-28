@@ -2,33 +2,33 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 // Define ELEMENTS directly within the component for self-containment in the immersive
 const ELEMENTS = {
-    1: { symbol: 'H', name: 'Hydrogen', color: '#B3E0FF' },
+    1: { symbol: 'H', name: 'Waterstof', color: '#B3E0FF' },
     2: { symbol: 'He', name: 'Helium', color: '#C6FCFF' },
     3: { symbol: 'Li', name: 'Lithium', color: '#FFB8C2' },
     4: { symbol: 'Be', name: 'Beryllium', color: '#FFF3B3' },
-    5: { symbol: 'B', name: 'Boron', color: '#D9D9D9' },
-    6: { symbol: 'C', name: 'Carbon', color: '#A9A9A9' },
-    7: { symbol: 'N', name: 'Nitrogen', color: '#87CEFA' },
-    8: { symbol: 'O', name: 'Oxygen', color: '#FFBABA' },
-    9: { symbol: 'F', name: 'Fluorine', color: '#ACE7EE' },
+    5: { symbol: 'B', name: 'Boor', color: '#D9D9D9' },
+    6: { symbol: 'C', name: 'Koolstof', color: '#A9A9A9' },
+    7: { symbol: 'N', name: 'Stikstof', color: '#87CEFA' },
+    8: { symbol: 'O', name: 'Zuurstof', color: '#FFBABA' },
+    9: { symbol: 'F', name: 'Fluor', color: '#ACE7EE' },
     10: { symbol: 'Ne', name: 'Neon', color: '#FFD700' },
-    11: { symbol: 'Na', name: 'Sodium', color: '#FFB6C1' },
+    11: { symbol: 'Na', name: 'Natrium', color: '#FFB6C1' }, // Corrected 'Nqtrium' to 'Natrium'
     12: { symbol: 'Mg', name: 'Magnesium', color: '#C0C0C0' },
-    13: { symbol: 'Al', name: 'Aluminum', color: '#B0C4DE' },
-    14: { symbol: 'Si', name: 'Silicon', color: '#BDB76B' },
-    15: { symbol: 'P', name: 'Phosphorus', color: '#FFA07A' },
-    16: { symbol: 'S', name: 'Sulfur', color: '#DAA520' },
-    17: { symbol: 'Cl', name: 'Chlorine', color: '#8FBC8F' },
+    13: { symbol: 'Al', name: 'Aluminium', color: '#B0C4DE' },
+    14: { symbol: 'Si', name: 'Silicium', color: '#BDB76B' },
+    15: { symbol: 'P', name: 'Fosfor', color: '#FFA07A' }, // Corrected 'Fosfpr' to 'Fosfor'
+    16: { symbol: 'S', name: 'Zwavel', color: '#DAA520' },
+    17: { symbol: 'Cl', name: 'Chloor', color: '#8FBC8F' },
     18: { symbol: 'Ar', name: 'Argon', color: '#ADD8E6' },
-    19: { symbol: 'K', name: 'Potassium', color: '#EE82EE' },
+    19: { symbol: 'K', name: 'Kalium', color: '#EE82EE' },
     20: { symbol: 'Ca', name: 'Calcium', color: '#F0E68C' },
     // You can add more elements as needed for higher atomic numbers
 };
 
 const GRID_SIZE = 4;
-const INITIAL_TILES = 2; // Number of tiles to start with
+const INITIAL_TILES = 2; // Aantal tegels om mee te starten
 
-// Tile Component
+// Tegel Component
 const Tile = ({ atomicNumber }) => {
     const element = ELEMENTS[atomicNumber] || { symbol: '', name: '', color: '#eee' }; // Default for empty
     const isEmpty = atomicNumber === 0;
@@ -38,8 +38,7 @@ const Tile = ({ atomicNumber }) => {
             className={`tile ${isEmpty ? 'empty' : ''}`}
             style={{ backgroundColor: element.color }}
         >
-            {/* Always render the content structure, but hide with visibility: hidden when empty */}
-            {/* The inner elements now have `line-height` and `margin: 0` to control their exact height */}
+            {/* Altijd de contentstructuur renderen, maar verbergen met visibility: hidden wanneer leeg */}
             <div className="atomic-number" style={{ visibility: isEmpty ? 'hidden' : 'visible' }}>{atomicNumber}</div>
             <div className="symbol" style={{ visibility: isEmpty ? 'hidden' : 'visible' }}>{element.symbol}</div>
             <div className="name" style={{ visibility: isEmpty ? 'hidden' : 'visible' }}>{element.name}</div>
@@ -47,13 +46,13 @@ const Tile = ({ atomicNumber }) => {
     );
 };
 
-// Main App Component
+// Hoofd App Component
 function App() {
-    // Helper function to create an empty board
+    // Functie om het lege bord te maken
     const initializeBoard = useCallback(() =>
         Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(0)), []);
 
-    // Helper to get random empty cell coordinates
+    // Willekeurige lege celcoördinaten ophalen
     const getRandomEmptyCell = useCallback((board) => {
         const emptyCells = [];
         for (let r = 0; r < GRID_SIZE; r++) {
@@ -67,7 +66,7 @@ function App() {
         return emptyCells[Math.floor(Math.random() * emptyCells.length)];
     }, []);
 
-    // Helper to find the highest atomic number currently on the board
+    // Bepalen van het hoogste atoomnummer op het bord.
     const getHighestElementOnBoard = useCallback((board) => {
         let max = 0;
         for (let r = 0; r < GRID_SIZE; r++) {
@@ -80,77 +79,85 @@ function App() {
         return max;
     }, []);
 
-    // Helper to check for game over condition
+    // Controle op game over
     const checkGameOver = useCallback((currentBoard) => {
-        // 1. Check for any empty cells
+        // 1. Check voor lege cellen
         for (let r = 0; r < GRID_SIZE; r++) {
             for (let c = 0; c < GRID_SIZE; c++) {
                 if (currentBoard[r][c] === 0) {
-                    return false; // Found an empty cell, not game over
+                    return false; // Lege cel gevonden, geen Game Over
                 }
             }
         }
 
-        // 2. Check for any possible merges (horizontal and vertical)
-        // Horizontal checks
+        // 2. Check op samenvoegen
+        // Horizontale checks
         for (let r = 0; r < GRID_SIZE; r++) {
             for (let c = 0; c < GRID_SIZE - 1; c++) {
                 if (currentBoard[r][c] !== 0 && currentBoard[r][c] === currentBoard[r][c + 1]) {
-                    return false; // Possible horizontal merge
+                    return false; // Horizontaal samenvoegen mogelijk
                 }
             }
         }
-        // Vertical checks
+        // Vertikale checks
         for (let c = 0; c < GRID_SIZE; c++) {
             for (let r = 0; r < GRID_SIZE - 1; r++) {
                 if (currentBoard[r][c] !== 0 && currentBoard[r][c] === currentBoard[r + 1][c]) {
-                    return false; // Possible vertical merge
+                    return false; // Verticaal samenvoegen mogelijk
                 }
             }
         }
 
-        return true; // No empty cells and no possible merges left
+        return true; // Geen lege cellen, samenvoegen niet mogelijk
     }, []);
 
-    // Helper to add a new element based on the highest element on board
+    // Nieuw element op bord zetten
     const addNewElement = useCallback((board) => {
-        const newBoard = board.map(row => [...row]); // Deep copy
+        const newBoard = board.map(row => [...row]);
         const emptyCell = getRandomEmptyCell(newBoard);
         if (emptyCell) {
             const highestElement = getHighestElementOnBoard(newBoard);
             let newAtomicNum;
 
-            // Define the primary spawn elements based on the highest achieved element
-            let primarySpawn1 = 1; // Hydrogen
+            // Bepaal init element spawn
+            let primarySpawn1 = 1; // Waterstof
             let primarySpawn2 = 2; // Helium
 
-            if (highestElement >= 11) { // If Sodium (11) or higher
-                primarySpawn1 = 3; // Lithium
-                primarySpawn2 = 4; // Beryllium
-            } else if (highestElement >= 10) { // If Neon (10) or higher
-                primarySpawn1 = 2; // Helium
-                primarySpawn2 = 3; // Lithium
+            // Hier van boven naar beneden de spawn elementen bepalen.
+            // Tier 2: Neon (10) reached -> Spawn He(2), Li(3)
+            if (highestElement >= 10) {
+                primarySpawn1 = 2;
+                primarySpawn2 = 3;
             }
-            // You can add more tiers here for even higher elements.
+            // Tier 3: Sodium (11) reached -> Spawn Li(3), Be(4)
+            if (highestElement >= 11) {
+                primarySpawn1 = 3;
+                primarySpawn2 = 4;
+            }
+            // Tier 4: Magnesium (12) reached -> Spawn Be(4), B(5)
+            if (highestElement >= 12) {
+                primarySpawn1 = 4;
+                primarySpawn2 = 5;
+            }
+            // Voeg hier meer lagen toe voor nog hogere elementen, bijv:
+            // if (highestElement >= 15) { primarySpawn1 = 7; primarySpawn2 = 8; } // Stikstof, Zuurstof
 
-            // Determine if a "retired" element should spawn (low chance)
-            // This is to clear potentially stuck low-level tiles
-            if (highestElement >= 10 && Math.random() < 0.05) { // 5% chance for a lower tier element if Neon+ achieved
-                // Check if Hydrogen (1) exists on board and is not primary spawn
-                if (highestElement >= 10 && newBoard.flat().includes(1) && primarySpawn1 !== 1) {
-                    newAtomicNum = 1;
+            // Bepalen of een oud element nog moet spawnen zodat je niet met 1 tegel overblijft.
+            if (Math.random() < 0.10) { // 10% kans voor een lagere tier element
+                if (highestElement >= 11 && newBoard.flat().includes(1)) { // If H is on board & Li/Be are primary spawns
+                    newAtomicNum = 1; // Spawn H
+                } else if (highestElement >= 12 && newBoard.flat().includes(2)) { // If He is on board & Be/B are primary spawns
+                    newAtomicNum = 2; // Spawn He
                 }
-                // Check if Helium (2) exists on board and is not primary spawn (e.g., when Li is primary)
-                else if (highestElement >= 11 && newBoard.flat().includes(2) && primarySpawn1 !== 2) {
-                    newAtomicNum = 2;
-                }
-                // If neither, or if it picked a spot where a higher element is more useful,
-                // fall back to current primary spawn logic.
+                // Voeg hier meer checks toe voor oudere elementen die mogelijk vastzitten
+                // else if (highestElement >= 13 && newBoard.flat().includes(3)) { newAtomicNum = 3; } // Spawn Li
+
                 else {
+                    // Fallback naar gewone logica als geen van bovenstaande van toepassing is
                     newAtomicNum = Math.random() < 0.9 ? primarySpawn1 : primarySpawn2;
                 }
             } else {
-                // Regular spawning for the current tier
+                // Gewone spawn logica voor de huidige tier
                 newAtomicNum = Math.random() < 0.9 ? primarySpawn1 : primarySpawn2;
             }
 
@@ -169,40 +176,40 @@ function App() {
     const [score, setScore] = useState(0);
     const [isGameOver, setIsGameOver] = useState(false);
 
-    // --- Core Game Logic ---
+    // --- Kern Spel Logica ---
 
-    // Handles sliding and merging for a single line (row or column)
+    // Schuiven en samenvoegen
     const slideAndMergeLine = useCallback((line, direction) => {
-        let tiles = line.filter(num => num !== 0); // Remove all empty cells first
+        let tiles = line.filter(num => num !== 0);
         let changed = false;
         let currentScoreIncrease = 0;
 
-        // Determine if merging should happen from right-to-left (for right/down moves)
-        // or left-to-right (for left/up moves)
+        // Bepaal of samenvoegen van rechts naar links (voor rechts/beneden bewegingen)
+        // of van links naar rechts (voor links/omhoog bewegingen) moet plaatsvinden
         if (direction === 'right' || direction === 'down') {
             for (let i = tiles.length - 1; i > 0; i--) {
                 if (tiles[i] !== 0 && tiles[i] === tiles[i - 1]) {
-                    tiles[i] += 1; // N+1 merge
+                    tiles[i] += 1; // N+1 samenvoegen
                     currentScoreIncrease += tiles[i];
-                    tiles.splice(i - 1, 1); // Remove the merged tile
+                    tiles.splice(i - 1, 1); // Verwijder de samengevoegde tegel
                     changed = true;
-                    i--; // Skip the next tile as it was just merged into
+                    i--; // Sla de volgende tegel over omdat deze net is samengevoegd
                 }
             }
-            // Pad with zeros at the beginning
+            // Vul aan met nullen aan het begin
             while (tiles.length < GRID_SIZE) {
                 tiles.unshift(0);
             }
-        } else { // 'left' or 'up'
+        } else { // 'left' of 'up'
             for (let i = 0; i < tiles.length - 1; i++) {
                 if (tiles[i] !== 0 && tiles[i] === tiles[i + 1]) {
-                    tiles[i] += 1; // N+1 merge
+                    tiles[i] += 1; // N+1 samenvoegen
                     currentScoreIncrease += tiles[i];
-                    tiles.splice(i + 1, 1); // Remove the merged tile
+                    tiles.splice(i + 1, 1); // Verwijder de samengevoegde tegel
                     changed = true;
                 }
             }
-            // Pad with zeros at the end
+            // Vul aan met nullen aan het einde
             while (tiles.length < GRID_SIZE) {
                 tiles.push(0);
             }
@@ -212,9 +219,9 @@ function App() {
             setScore(prevScore => prevScore + currentScoreIncrease);
         }
 
-        // Check if the actual tile values (excluding zeros) changed, needed for boardChanged
-        // Also check if positions changed, by comparing the original line (after filtering zeros)
-        // with the new line (after filtering zeros)
+        // Controleer of de werkelijke tegelwaarden (exclusief nullen) zijn gewijzigd, nodig voor boardChanged
+        // Controleer ook of posities zijn gewijzigd, door de originele lijn (na filteren van nullen)
+        // te vergelijken met de nieuwe lijn (na filteren van nullen)
         const originalLineWithoutZeros = line.filter(num => num !== 0);
         const newLineWithoutZeros = tiles.filter(num => num !== 0);
 
@@ -227,19 +234,19 @@ function App() {
     }, [setScore]);
 
 
-    // Applies a move (up, down, left, right) to the entire board
+    // Past een beweging (omhoog, omlaag, links, rechts) toe op het hele bord
     const applyMove = useCallback((direction) => {
-        if (isGameOver) return; // Prevent moves if game is over
+        if (isGameOver) return; // Voorkom bewegingen als het spel voorbij is
 
-        let newBoard = board.map(row => [...row]); // Deep copy
+        let newBoard = board.map(row => [...row]); // Maak een diepe kopie
         let boardChanged = false;
 
         if (direction === 'left' || direction === 'right') {
             for (let r = 0; r < GRID_SIZE; r++) {
-                const originalRow = [...newBoard[r]]; // Save original for comparison
+                const originalRow = [...newBoard[r]]; // Bewaar origineel voor vergelijking
                 const { newLine, changed } = slideAndMergeLine(newBoard[r], direction);
                 newBoard[r] = newLine;
-                // Check if the row's state actually changed (values or positions)
+                // Controleer of de staat van de rij daadwerkelijk is gewijzigd (waarden of posities)
                 if (changed || JSON.stringify(originalRow) !== JSON.stringify(newLine)) {
                     boardChanged = true;
                 }
@@ -250,16 +257,16 @@ function App() {
                 for (let r = 0; r < GRID_SIZE; r++) {
                     currentColumn.push(newBoard[r][c]);
                 }
-                const originalColumn = [...currentColumn]; // Save original for comparison
+                const originalColumn = [...currentColumn]; // Bewaar origineel voor vergelijking
 
                 const { newLine, changed } = slideAndMergeLine(currentColumn, direction);
 
-                // Check if the column's state actually changed (values or positions)
+                // Controleer of de staat van de kolom daadwerkelijk is gewijzigd (waarden of posities)
                 if (changed || JSON.stringify(originalColumn) !== JSON.stringify(newLine)) {
                     boardChanged = true;
                 }
 
-                // Apply the processed column back to the new board
+                // Pas de verwerkte kolom toe op het nieuwe bord
                 for (let r = 0; r < GRID_SIZE; r++) {
                     newBoard[r][c] = newLine[r];
                 }
@@ -269,14 +276,14 @@ function App() {
         if (boardChanged) {
             const finalBoard = addNewElement(newBoard);
             setBoard(finalBoard);
-            // After adding a new element, check if the game is now over
+            // Na het toevoegen van een nieuw element, controleer of het spel voorbij is
             if (checkGameOver(finalBoard)) {
                 setIsGameOver(true);
             }
         }
     }, [board, slideAndMergeLine, addNewElement, checkGameOver, isGameOver]);
 
-    // Handles starting a new game
+    // Nieuw spel starten
     const handleNewGame = useCallback(() => {
         let initialBoard = initializeBoard();
         for (let i = 0; i < INITIAL_TILES; i++) {
@@ -289,12 +296,12 @@ function App() {
 
     // --- Input Handlers ---
 
-    // Keyboard Input Handler
+    // Toetsenbord Input Handler
     useEffect(() => {
         const handleKeyDown = (event) => {
             switch (event.key) {
                 case 'ArrowUp':
-                    event.preventDefault(); // Prevent page scrolling
+                    event.preventDefault(); // Voorkom paginarollen
                     applyMove('up');
                     break;
                 case 'ArrowDown':
@@ -318,7 +325,7 @@ function App() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [applyMove]);
 
-    // Touch/Swipe Input Handler for mobile
+    // Touch/Swipe Input Handler voor mobiel
     const [touchStartX, setTouchStartX] = useState(null);
     const [touchStartY, setTouchStartY] = useState(null);
 
@@ -334,25 +341,25 @@ function App() {
         const touchEndY = event.changedTouches[0].clientY;
 
         const dx = touchEndX - touchStartX;
-        const dy = touchEndY - touchStartY - 20; // Added a slight vertical offset to avoid accidental vertical scroll
+        const dy = touchEndY - touchStartY - 20; // Lichte verticale offset toegevoegd om onbedoeld verticaal scrollen te voorkomen
 
-        // Determine if it's a horizontal or vertical swipe, and if it's significant enough
-        const minSwipeDistance = 30; // Minimum pixel distance for a swipe to register
-        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > minSwipeDistance) { // Horizontal swipe
-            if (dx > 0) { // Swiped right
+        // Bepaal of het een horizontale of verticale veeg is, en of deze significant genoeg is
+        const minSwipeDistance = 30; // Minimale pixelafstand voor een veeg om te registreren
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > minSwipeDistance) { // Horizontale veeg
+            if (dx > 0) { // Naar rechts geveegd
                 applyMove('right');
-            } else { // Swiped left
+            } else { // Naar links geveegd
                 applyMove('left');
             }
-        } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > minSwipeDistance) { // Vertical swipe
-            if (dy > 0) { // Swiped down
+        } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > minSwipeDistance) { // Verticale veeg
+            if (dy > 0) { // Naar beneden geveegd
                 applyMove('down');
-            } else { // Swiped up
+            } else { // Naar boven geveegd
                 applyMove('up');
             }
         }
 
-        // Reset touch coordinates
+        // Reset touchcoördinaten
         setTouchStartX(null);
         setTouchStartY(null);
     };
@@ -362,7 +369,7 @@ function App() {
         <div className="game-wrapper"
              onTouchStart={handleTouchStart}
              onTouchEnd={handleTouchEnd}>
-            {/* Styles are embedded here for Canvas self-containment */}
+            {/* Stijlen zijn hier ingebed voor zelfstandigheid van Canvas */}
             <style>{`
                 .game-wrapper {
                     display: flex;
@@ -370,27 +377,27 @@ function App() {
                     align-items: center;
                     min-height: 100vh;
                     background-color: #f0f0f0;
-                    font-family: 'Inter', sans-serif; /* Using Inter as per instructions */
+                    font-family: 'Inter', sans-serif; /* Gebruik van Inter volgens instructies */
                     color: #333;
-                    width: 100vw; /* Full viewport width */
-                    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+                    width: 100vw; /* Volledige viewport breedte */
+                    box-sizing: border-box; /* Inclusief padding en rand in de totale breedte en hoogte van het element */
                 }
 
                 .game-container {
-                    position: relative; /* For game over overlay positioning */
+                    position: relative; /* Voor positionering van het game over overlay */
                     background-color: #bbada0;
                     padding: 20px;
-                    border-radius: 12px; /* Rounded corners */
+                    border-radius: 12px; /* Afgeronde hoeken */
                     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
                     text-align: center;
-                    /* Using flex properties to center content */
+                    /* Gebruik van flex-eigenschappen om inhoud te centreren */
                     display: flex;
                     flex-direction: column;
-                    align-items: center; /* Centers horizontally in a column layout */
-                    justify-content: center; /* Centers vertically in a column layout */
-                    width: 90%; /* Responsive width */
-                    max-width: 450px; /* Max width for larger screens */
-                    margin: 20px auto; /* Centering and margin */
+                    align-items: center; /* Horizontaal centreren in een kolomindeling */
+                    justify-content: center; /* Verticaal centreren in een kolomindeling */
+                    width: 90%; /* Responsieve breedte */
+                    max-width: 450px; /* Maximale breedte voor grotere schermen */
+                    margin: 20px auto; /* Centreren en marge */
                     box-sizing: border-box;
                 }
 
@@ -416,54 +423,55 @@ function App() {
                     display: grid;
                     grid-template-columns: repeat(${GRID_SIZE}, 1fr);
                     grid-template-rows: repeat(${GRID_SIZE}, 1fr);
-                    gap: 12px; /* Increased gap */
+                    gap: 12px; /* Vergrote afstand */
                     background-color: #cdc1b4;
-                    padding: 15px; /* Increased padding */
-                    border-radius: 10px; /* Rounded corners */
-                    width: clamp(300px, 80vw, 400px); /* Responsive width range */
-                    height: clamp(300px, 80vw, 400px); /* Keep it square, matching width */
+                    padding: 15px; /* Vergrote padding */
+                    border-radius: 10px; /* Afgeronde hoeken */
+                    width: clamp(300px, 80vw, 400px); /* Responsief breedtebereik */
+                    height: clamp(300px, 80vw, 400px); /* Vierkant houden, overeenkomend met breedte */
                     box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
-                    /* No margin: auto here, parent flexbox handles centering */
+                    /* Geen margin: auto hier, ouder flexbox beheert centreren */
                 }
 
                 .board-row {
-                    display: contents; /* Allows tiles to be direct children of the grid */
+                    display: contents; /* Zorgt ervoor dat tegels directe kinderen van de grid zijn */
                 }
 
                 .tile {
                     width: 100%;
                     height: 100%;
                     background-color: #eee4da;
-                    border-radius: 8px; /* More rounded corners */
+                    border-radius: 8px; /* Meer afgeronde hoeken */
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
                     align-items: center;
                     font-weight: bold;
-                    font-size: clamp(0.8em, 4vw, 2em); /* Responsive font size */
+                    font-size: clamp(0.8em, 4vw, 2em); /* Responsieve lettergrootte */
                     color: #776e65;
                     box-sizing: border-box;
                     padding: 5px;
                     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                    transition: transform 0.1s ease-out, background-color 0.1s ease; /* Basic transition for feedback */
+                    transition: transform 0.1s ease-out, background-color 0.1s ease; /* Basisovergang voor feedback */
                 }
 
                 .tile:active {
-                    transform: scale(0.95); /* Little press effect on tap/click */
+                    transform: scale(0.95); /* Klein drukeffect bij tikken/klikken */
                 }
 
                 .tile.empty {
                     background-color: rgba(238, 228, 218, 0.35);
+                    /* Zorg ervoor dat inhoud onzichtbaar is, maar nog steeds ruimte inneemt */
                 }
 
                 .tile .atomic-number,
                 .tile .symbol,
                 .tile .name {
-                    margin: 0; /* Ensures no default margins push content around */
-                    padding: 0; /* Ensures no default padding pushes content around */
-                    line-height: 1.2; /* Slightly more generous line-height for readability */
-                    min-height: 1.2em; /* Ensure a minimum height for each line of text */
-                    transition: opacity 0.1s ease-in-out; /* Smooth transition for opacity */
+                    margin: 0; /* Zorgt ervoor dat er geen standaardmarges zijn die inhoud verschuiven */
+                    padding: 0; /* Zorgt ervoor dat er geen standaardpadding is die inhoud verschuiven */
+                    line-height: 1.2; /* Iets genereuzere lijnhoogte voor leesbaarheid */
+                    min-height: 1.2em; /* Zorg voor een minimale hoogte voor elke tekstregel */
+                    transition: opacity 0.1s ease-in-out; /* Vloeiende overgang voor transparantie */
                 }
                 .tile .atomic-number {
                     font-size: 0.6em;
@@ -494,22 +502,22 @@ function App() {
                     left: 0;
                     right: 0;
                     bottom: 0;
-                    background-color: rgba(238, 228, 218, 0.7); /* Semi-transparent overlay */
+                    background-color: rgba(238, 228, 218, 0.7); /* Semi-transparante overlay */
                     display: flex;
                     justify-content: center;
                     align-items: center;
                     z-index: 10;
-                    border-radius: 12px; /* Match container */
+                    border-radius: 12px; /* Overeenkomen met container */
                 }
 
                 .game-over-message {
-                    background-color: #fcf6e6; /* Lighter background for message box */
+                    background-color: #fcf6e6; /* Lichtere achtergrond voor berichtvak */
                     padding: 30px;
                     border-radius: 12px;
                     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
                     text-align: center;
                     color: #776e65;
-                    max-width: 80%; /* Responsive width */
+                    max-width: 80%; /* Responsieve breedte */
                 }
 
                 .game-over-message h2 {
@@ -534,7 +542,7 @@ function App() {
                     cursor: pointer;
                     transition: background-color 0.2s ease, transform 0.1s ease;
                     box-shadow: 0 3px 5px rgba(0,0,0,0.2);
-                    margin-top: 20px; /* For the new game button below the board */
+                    margin-top: 20px; /* Voor de nieuwe spelknop onder het bord */
                 }
 
                 .game-over-message button:hover, .new-game-button:hover {
@@ -548,12 +556,12 @@ function App() {
                 }
 
                 .new-game-button {
-                    display: block; /* Ensures it takes full width below board if needed */
-                    margin: 25px auto 0 auto; /* Center it below the board */
+                    display: block; /* Zorgt ervoor dat het de volledige breedte onder het bord inneemt indien nodig */
+                    margin: 25px auto 0 auto; /* Centreer het onder het bord */
                     width: fit-content;
                 }
 
-                /* Responsive adjustments for smaller screens */
+                /* Responsieve aanpassingen voor kleinere schermen */
                 @media (max-width: 600px) {
                     .game-container {
                         padding: 15px;
@@ -585,8 +593,8 @@ function App() {
                 }
             `}</style>
             <div className="game-container">
-                <h1>Elemental Merge</h1>
-                <div className="score">Score: {score}</div>
+                <h1>Elementen Samenvoegen</h1> {/* Translated */}
+                <div className="score">Score: {score}</div> {/* Translated */}
                 {/* Changed the .game-board's margin to 0 and centered via game-container's align-items */}
                 <div className="game-board">
                     {board.map((row, rowIndex) => (
@@ -597,14 +605,14 @@ function App() {
                         </div>
                     ))}
                 </div>
-                <p>Use <strong>Arrow Keys</strong> or <strong>Swipe</strong> to play!</p>
-                <button className="new-game-button" onClick={handleNewGame}>New Game</button>
+                <p>Gebruik <strong>Pijltjestoetsen</strong> of <strong>Vegen</strong> om te spelen!</p> {/* Translated */}
+                <button className="new-game-button" onClick={handleNewGame}>Nieuw Spel</button> {/* Translated */}
                 {isGameOver && (
                     <div className="game-over-overlay">
                         <div className="game-over-message">
-                            <h2>Game Over!</h2>
-                            <p>Your final score: {score}</p>
-                            <button onClick={handleNewGame}>New Game</button>
+                            <h2>Spel Voorbij!</h2> {/* Translated */}
+                            <p>Je eindscore: {score}</p> {/* Translated */}
+                            <button onClick={handleNewGame}>Nieuw Spel</button> {/* Translated */}
                         </div>
                     </div>
                 )}
