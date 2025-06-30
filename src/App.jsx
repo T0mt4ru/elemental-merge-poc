@@ -2,27 +2,155 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 // Define ELEMENTS directly within the component for self-containment in the immersive
 const ELEMENTS = {
-    1: { symbol: 'H', name: 'Waterstof', color: '#B3E0FF' },
-    2: { symbol: 'He', name: 'Helium', color: '#C6FCFF' },
-    3: { symbol: 'Li', name: 'Lithium', color: '#FFB8C2' },
-    4: { symbol: 'Be', name: 'Beryllium', color: '#FFF3B3' },
-    5: { symbol: 'B', name: 'Boor', color: '#D9D9D9' },
-    6: { symbol: 'C', name: 'Koolstof', color: '#A9A9A9' },
-    7: { symbol: 'N', name: 'Stikstof', color: '#87CEFA' },
-    8: { symbol: 'O', name: 'Zuurstof', color: '#FFBABA' },
-    9: { symbol: 'F', name: 'Fluor', color: '#ACE7EE' },
-    10: { symbol: 'Ne', name: 'Neon', color: '#FFD700' },
-    11: { symbol: 'Na', name: 'Natrium', color: '#FFB6C1' }, // Corrected 'Nqtrium' to 'Natrium'
-    12: { symbol: 'Mg', name: 'Magnesium', color: '#C0C0C0' },
-    13: { symbol: 'Al', name: 'Aluminium', color: '#B0C4DE' },
-    14: { symbol: 'Si', name: 'Silicium', color: '#BDB76B' },
-    15: { symbol: 'P', name: 'Fosfor', color: '#FFA07A' }, // Corrected 'Fosfpr' to 'Fosfor'
-    16: { symbol: 'S', name: 'Zwavel', color: '#DAA520' },
-    17: { symbol: 'Cl', name: 'Chloor', color: '#8FBC8F' },
-    18: { symbol: 'Ar', name: 'Argon', color: '#ADD8E6' },
-    19: { symbol: 'K', name: 'Kalium', color: '#EE82EE' },
-    20: { symbol: 'Ca', name: 'Calcium', color: '#F0E68C' },
-    // You can add more elements as needed for higher atomic numbers
+    // Groep 1: Alkali Metalen (exclusief Waterstof, dat is uniek) - Zacht Roze/Rood
+    1: { symbol: 'H', name: 'Waterstof', color: '#B3E0FF' }, // Unieke kleur voor Waterstof
+    3: { symbol: 'Li', name: 'Lithium', color: '#FF9999' },
+    11: { symbol: 'Na', name: 'Natrium', color: '#FF9999' },
+    19: { symbol: 'K', name: 'Kalium', color: '#FF9999' },
+    37: { symbol: 'Rb', name: 'Rubidium', color: '#FF9999' },
+    55: { symbol: 'Cs', name: 'Cesium', color: '#FF9999' },
+    87: { symbol: 'Fr', name: 'Francium', color: '#FF9999' },
+
+    // Groep 2: Aardalkali Metalen - Licht Oranje
+    4: { symbol: 'Be', name: 'Beryllium', color: '#FFCC99' },
+    12: { symbol: 'Mg', name: 'Magnesium', color: '#FFCC99' },
+    20: { symbol: 'Ca', name: 'Calcium', color: '#FFCC99' },
+    38: { symbol: 'Sr', name: 'Strontium', color: '#FFCC99' },
+    56: { symbol: 'Ba', name: 'Barium', color: '#FFCC99' },
+    88: { symbol: 'Ra', name: 'Radium', color: '#FFCC99' },
+
+    // Overgangsmetalen - Gedifferentieerde tinten blauw/grijs
+    // Periode 4 (Sc-Zn)
+    21: { symbol: 'Sc', name: 'Scandium', color: '#A0BBE0' },
+    22: { symbol: 'Ti', name: 'Titanium', color: '#A5C0E5' },
+    23: { symbol: 'V', name: 'Vanadium', color: '#AAC5EA' },
+    24: { symbol: 'Cr', name: 'Chroom', color: '#B0CAEF' },
+    25: { symbol: 'Mn', name: 'Mangaan', color: '#B5CFF4' },
+    26: { symbol: 'Fe', name: 'IJzer', color: '#BBDAF9' },
+    27: { symbol: 'Co', name: 'Kobalt', color: '#C0DFFD' },
+    28: { symbol: 'Ni', name: 'Nikkel', color: '#C5E4FF' },
+    29: { symbol: 'Cu', name: 'Koper', color: '#CAE9FF' },
+    30: { symbol: 'Zn', name: 'Zink', color: '#CFEEFF' },
+
+    // Periode 5 (Y-Cd)
+    39: { symbol: 'Y', name: 'Yttrium', color: '#8FB0D0' },
+    40: { symbol: 'Zr', name: 'Zirkonium', color: '#94B5D5' },
+    41: { symbol: 'Nb', name: 'Niobium', color: '#99BADF' },
+    42: { symbol: 'Mo', name: 'Molybdeen', color: '#9EBFE4' },
+    43: { symbol: 'Tc', name: 'Technetium', color: '#A3C4E9' },
+    44: { symbol: 'Ru', name: 'Ruthenium', color: '#A8C9EE' },
+    45: { symbol: 'Rh', name: 'Rhodium', color: '#ADD3F3' },
+    46: { symbol: 'Pd', name: 'Palladium', color: '#B2D8F8' },
+    47: { symbol: 'Ag', name: 'Zilver', color: '#B7DEFD' },
+    48: { symbol: 'Cd', name: 'Cadmium', color: '#BCE3FF' },
+
+    // Periode 6 (Hf-Hg) - Lutetium (71) is hier ook vaak bij ingedeeld, start hier.
+    71: { symbol: 'Lu', name: 'Lutetium', color: '#7FA0B0' },
+    72: { symbol: 'Hf', name: 'Hafnium', color: '#84A5B5' },
+    73: { symbol: 'Ta', name: 'Tantalium', color: '#89AABA' },
+    74: { symbol: 'W', name: 'Wolfraam', color: '#8EA0BF' },
+    75: { symbol: 'Re', name: 'Rhenium', color: '#93A5C4' },
+    76: { symbol: 'Os', name: 'Osmium', color: '#98AAC9' },
+    77: { symbol: 'Ir', name: 'Iridium', color: '#9DB2CE' },
+    78: { symbol: 'Pt', name: 'Platina', color: '#A2B7D3' },
+    79: { symbol: 'Au', name: 'Goud', color: '#A7BBD8' },
+    80: { symbol: 'Hg', name: 'Kwik', color: '#ACC2DD' },
+
+    // Periode 7 (Rf-Cn) - Lawrencium (103) is hier ook vaak bij ingedeeld.
+    103: { symbol: 'Lr', name: 'Lawrencium', color: '#6F90A0' },
+    104: { symbol: 'Rf', name: 'Rutherfordium', color: '#7495A5' },
+    105: { symbol: 'Db', name: 'Dubnium', color: '#799AAC' },
+    106: { symbol: 'Sg', name: 'Seaborgium', color: '#7EA0B1' },
+    107: { symbol: 'Bh', name: 'Bohrium', color: '#83A5B6' },
+    108: { symbol: 'Hs', name: 'Hassium', color: '#88AABD' },
+    109: { symbol: 'Mt', name: 'Meitnerium', color: '#8DADC2' },
+    110: { symbol: 'Ds', name: 'Darmstadtium', color: '#92B2C7' },
+    111: { symbol: 'Rg', name: 'Roentgenium', color: '#97B7CC' },
+    112: { symbol: 'Cn', name: 'Copernicium', color: '#9CBBD1' },
+
+    // Groep 13: Boorgroep - Roze/Paars
+    5: { symbol: 'B', name: 'Boor', color: '#E0BBE4' },
+    13: { symbol: 'Al', name: 'Aluminium', color: '#E0BBE4' },
+    31: { symbol: 'Ga', name: 'Gallium', color: '#E0BBE4' },
+    49: { symbol: 'In', name: 'Indium', color: '#E0BBE4' },
+    81: { symbol: 'Tl', name: 'Thallium', color: '#E0BBE4' },
+    113: { symbol: 'Nh', name: 'Nihonium', color: '#E0BBE4' },
+
+    // Groep 14: Koolstofgroep - Grijs
+    6: { symbol: 'C', name: 'Koolstof', color: '#9E9E9E' },
+    14: { symbol: 'Si', name: 'Silicium', color: '#9E9E9E' },
+    32: { symbol: 'Ge', name: 'Germanium', color: '#9E9E9E' },
+    50: { symbol: 'Sn', name: 'Tin', color: '#9E9E9E' },
+    82: { symbol: 'Pb', name: 'Lood', color: '#9E9E9E' },
+    114: { symbol: 'Fl', name: 'Flerovium', color: '#9E9E9E' },
+
+    // Groep 15: Stikstofgroep - Groenachtig
+    7: { symbol: 'N', name: 'Stikstof', color: '#B3E0C2' },
+    15: { symbol: 'P', name: 'Fosfor', color: '#B3E0C2' },
+    33: { symbol: 'As', name: 'Arseen', color: '#B3E0C2' },
+    51: { symbol: 'Sb', name: 'Antimoon', color: '#B3E0C2' },
+    83: { symbol: 'Bi', name: 'Bismut', color: '#B3E0C2' },
+    115: { symbol: 'Mc', name: 'Moscovium', color: '#B3E0C2' },
+
+    // Groep 16: Zuurstofgroep (Chalcogenen) - Bruinachtig
+    8: { symbol: 'O', name: 'Zuurstof', color: '#D4AA77' },
+    16: { symbol: 'S', name: 'Zwavel', color: '#D4AA77' },
+    34: { symbol: 'Se', name: 'Seleen', color: '#D4AA77' },
+    52: { symbol: 'Te', name: 'Telluur', color: '#D4AA77' },
+    84: { symbol: 'Po', name: 'Polonium', color: '#D4AA77' },
+    116: { symbol: 'Lv', name: 'Livermorium', color: '#D4AA77' },
+
+    // Groep 17: Halogenen - Lichtgroen/Cyaan
+    9: { symbol: 'F', name: 'Fluor', color: '#9EE0C9' },
+    17: { symbol: 'Cl', name: 'Chloor', color: '#9EE0C9' },
+    35: { symbol: 'Br', name: 'Broom', color: '#9EE0C9' },
+    53: { symbol: 'I', name: 'Jodium', color: '#9EE0C9' },
+    85: { symbol: 'At', name: 'Astaat', color: '#9EE0C9' },
+    117: { symbol: 'Ts', name: 'Tennessine', color: '#9EE0C9' },
+
+    // Groep 18: Edelgassen - Helder Geel
+    2: { symbol: 'He', name: 'Helium', color: '#FFFF99' },
+    10: { symbol: 'Ne', name: 'Neon', color: '#FFFF99' },
+    18: { symbol: 'Ar', name: 'Argon', color: '#FFFF99' },
+    36: { symbol: 'Kr', name: 'Krypton', color: '#FFFF99' },
+    54: { symbol: 'Xe', name: 'Xenon', color: '#FFFF99' },
+    86: { symbol: 'Rn', name: 'Radon', color: '#FFFF99' },
+    118: { symbol: 'Og', name: 'Oganesson', color: '#FFFF99' },
+
+    // Lanthaniden - Gedifferentieerde tinten paars
+    // De kleuren lopen hier op, beginnend bij de donkerste tint voor La
+    57: { symbol: 'La', name: 'Lanthanium', color: '#BB99CC' },
+    58: { symbol: 'Ce', name: 'Cerium', color: '#C0A0D1' },
+    59: { symbol: 'Pr', name: 'Praseodymium', color: '#C5A7D6' },
+    60: { symbol: 'Nd', name: 'Neodymium', color: '#CAADD7' },
+    61: { symbol: 'Pm', name: 'Promethium', color: '#CFB4DD' },
+    62: { symbol: 'Sm', name: 'Samarium', color: '#D4BBDF' },
+    63: { symbol: 'Eu', name: 'Europium', color: '#D9C2E0' },
+    64: { symbol: 'Gd', name: 'Gadolinium', color: '#DEC9E2' },
+    65: { symbol: 'Tb', name: 'Terbium', color: '#E3D0E4' },
+    66: { symbol: 'Dy', name: 'Dysprosium', color: '#E8D7E6' },
+    67: { symbol: 'Ho', name: 'Holmium', color: '#EEDEE8' },
+    68: { symbol: 'Er', name: 'Erbium', color: '#F3E5E9' },
+    69: { symbol: 'Tm', name: 'Thulium', color: '#F8ECEB' },
+    70: { symbol: 'Yb', name: 'Ytterbium', color: '#FDF3ED' },
+
+
+    // Actiniden - Gedifferentieerde tinten groen
+    // De kleuren lopen hier op, beginnend bij de donkerste tint voor Ac
+    89: { symbol: 'Ac', name: 'Actinium', color: '#99CC99' },
+    90: { symbol: 'Th', name: 'Thorium', color: '#A0D1A0' },
+    91: { symbol: 'Pa', name: 'Protactinium', color: '#A7D6A7' },
+    92: { symbol: 'U', name: 'Uranium', color: '#AEDBAE' },
+    93: { symbol: 'Np', name: 'Neptunium', color: '#B5E0B5' },
+    94: { symbol: 'Pu', name: 'Plutonium', color: '#BCE6BC' },
+    95: { symbol: 'Am', name: 'Americium', color: '#C3EBC3' },
+    96: { symbol: 'Cm', name: 'Curium', color: '#CAF1CA' },
+    97: { symbol: 'Bk', name: 'Berkelium', color: '#D1F6D1' },
+    98: { symbol: 'Cf', name: 'Californium', color: '#D8FCDC' },
+    99: { symbol: 'Es', name: 'Einsteinium', color: '#DFFFE3' },
+    100: { symbol: 'Fm', name: 'Fermium', color: '#E6FFE9' },
+    101: { symbol: 'Md', name: 'Mendelevium', color: '#EDFFEE' },
+    102: { symbol: 'No', name: 'Nobelium', color: '#F4FFF4' },
 };
 
 const GRID_SIZE = 4;
@@ -123,41 +251,31 @@ function App() {
             let primarySpawn1 = 1; // Waterstof
             let primarySpawn2 = 2; // Helium
 
-            // Hier van boven naar beneden de spawn elementen bepalen.
-            // Tier 2: Neon (10) reached -> Spawn He(2), Li(3)
+            // Bepaal element spawn dynamisch vanaf Neon (10)
             if (highestElement >= 10) {
-                primarySpawn1 = 2;
-                primarySpawn2 = 3;
+                // Adjust primary spawns based on highest element for progression
+                // Ensure primarySpawn1 is at least 1, and primarySpawn2 is primarySpawn1 + 1
+                primarySpawn1 = Math.max(1, highestElement - 8);
+                primarySpawn2 = primarySpawn1 + 1;
             }
-            // Tier 3: Sodium (11) reached -> Spawn Li(3), Be(4)
-            if (highestElement >= 11) {
-                primarySpawn1 = 3;
-                primarySpawn2 = 4;
-            }
-            // Tier 4: Magnesium (12) reached -> Spawn Be(4), B(5)
-            if (highestElement >= 12) {
-                primarySpawn1 = 4;
-                primarySpawn2 = 5;
-            }
-            // Voeg hier meer lagen toe voor nog hogere elementen, bijv:
-            // if (highestElement >= 15) { primarySpawn1 = 7; primarySpawn2 = 8; } // Stikstof, Zuurstof
+            // Add more tiers as needed, ensure primarySpawn1/2 don't exceed max element defined
 
-            // Bepalen of een oud element nog moet spawnen zodat je niet met 1 tegel overblijft.
-            if (Math.random() < 0.10) { // 10% kans voor een lagere tier element
-                if (highestElement >= 11 && newBoard.flat().includes(1)) { // If H is on board & Li/Be are primary spawns
-                    newAtomicNum = 1; // Spawn H
-                } else if (highestElement >= 12 && newBoard.flat().includes(2)) { // If He is on board & Be/B are primary spawns
-                    newAtomicNum = 2; // Spawn He
+            // Logic to potentially spawn a "stuck" lower-tier element
+            const stuckElements = [];
+            for (let i = 1; i < primarySpawn1; i++) { // Check for elements below the current primary spawn tier
+                if (newBoard.flat().includes(i)) {
+                    // Check if there's only one of this element (implies it might be stuck)
+                    const count = newBoard.flat().filter(num => num === i).length;
+                    if (count === 1) { // Only one of this element, potentially stuck
+                        stuckElements.push(i);
+                    }
                 }
-                // Voeg hier meer checks toe voor oudere elementen die mogelijk vastzitten
-                // else if (highestElement >= 13 && newBoard.flat().includes(3)) { newAtomicNum = 3; } // Spawn Li
+            }
 
-                else {
-                    // Fallback naar gewone logica als geen van bovenstaande van toepassing is
-                    newAtomicNum = Math.random() < 0.9 ? primarySpawn1 : primarySpawn2;
-                }
+            if (stuckElements.length > 0 && Math.random() < 0.15) { // 15% chance to spawn a stuck element
+                newAtomicNum = stuckElements[Math.floor(Math.random() * stuckElements.length)];
             } else {
-                // Gewone spawn logica voor de huidige tier
+                // Otherwise, spawn from the primary tier (90% lower, 10% higher)
                 newAtomicNum = Math.random() < 0.9 ? primarySpawn1 : primarySpawn2;
             }
 
@@ -465,7 +583,6 @@ function App() {
 
                 .tile.empty {
                     background-color: rgba(238, 228, 218, 0.35);
-                    /* Zorg ervoor dat inhoud onzichtbaar is, maar nog steeds ruimte inneemt */
                 }
 
                 .tile .atomic-number,
@@ -597,7 +714,7 @@ function App() {
                 }
             `}</style>
             <div className="game-container">
-                <h1>Elementen Samenvoegen</h1> 
+                <h1>Elemental Merge</h1> 
                 <div className="score">Score: {score}</div> 
                 {/* Changed the .game-board's margin to 0 and centered via game-container's align-items */}
                 <div className="game-board">
