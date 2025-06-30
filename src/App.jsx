@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import './App.css';
 
 // Define ELEMENTS directly within the component for self-containment in the immersive
 const ELEMENTS = {
@@ -251,31 +252,26 @@ function App() {
             let primarySpawn1 = 1; // Waterstof
             let primarySpawn2 = 2; // Helium
 
-            // Bepaal element spawn dynamisch vanaf Neon (10)
-            if (highestElement >= 10) {
-                // Adjust primary spawns based on highest element for progression
-                // Ensure primarySpawn1 is at least 1, and primarySpawn2 is primarySpawn1 + 1
-                primarySpawn1 = Math.max(1, highestElement - 8);
-                primarySpawn2 = primarySpawn1 + 1;
-            }
-            // Add more tiers as needed, ensure primarySpawn1/2 don't exceed max element defined
-
+            // Bepaal element spawn dynamisch vanaf een bepaald punt
+            // Nu gebaseerd op een meer algemene formule om progressie te behouden
+            // Zorgt ervoor dat primaire spawns niet onder 1 komen
+            primarySpawn1 = Math.max(1, highestElement - 8);
+            primarySpawn2 = primarySpawn1 + 1;
+            
             // Logic to potentially spawn a "stuck" lower-tier element
             const stuckElements = [];
-            for (let i = 1; i < primarySpawn1; i++) { // Check for elements below the current primary spawn tier
-                if (newBoard.flat().includes(i)) {
-                    // Check if there's only one of this element (implies it might be stuck)
-                    const count = newBoard.flat().filter(num => num === i).length;
-                    if (count === 1) { // Only one of this element, potentially stuck
-                        stuckElements.push(i);
-                    }
+            // Iterate from Hydrogen (1) up to the element just before the current primary spawn tier
+            for (let i = 1; i < primarySpawn1; i++) {
+                const count = newBoard.flat().filter(num => num === i).length;
+                if (count === 1) { // If there's only one instance of this lower element, it might be stuck
+                    stuckElements.push(i);
                 }
             }
 
-            if (stuckElements.length > 0 && Math.random() < 0.15) { // 15% chance to spawn a stuck element
+            if (stuckElements.length > 0 && Math.random() < 0.15) { // 15% kans om een vastzittend element te spawnen
                 newAtomicNum = stuckElements[Math.floor(Math.random() * stuckElements.length)];
             } else {
-                // Otherwise, spawn from the primary tier (90% lower, 10% higher)
+                // Anders, spawn vanuit de primaire tier (90% lager, 10% hoger)
                 newAtomicNum = Math.random() < 0.9 ? primarySpawn1 : primarySpawn2;
             }
 
@@ -293,6 +289,7 @@ function App() {
     });
     const [score, setScore] = useState(0);
     const [isGameOver, setIsGameOver] = useState(false);
+    const [showHelp, setShowHelp] = useState(false); // Nieuwe state voor helpscherm
 
     // --- Kern Spel Logica ---
 
@@ -354,7 +351,7 @@ function App() {
 
     // Past een beweging (omhoog, omlaag, links, rechts) toe op het hele bord
     const applyMove = useCallback((direction) => {
-        if (isGameOver) return; // Voorkom bewegingen als het spel voorbij is
+        if (isGameOver || showHelp) return; // Voorkom bewegingen als spel voorbij is of help open is
 
         let newBoard = board.map(row => [...row]); // Maak een diepe kopie
         let boardChanged = false;
@@ -399,7 +396,7 @@ function App() {
                 setIsGameOver(true);
             }
         }
-    }, [board, slideAndMergeLine, addNewElement, checkGameOver, isGameOver]);
+    }, [board, slideAndMergeLine, addNewElement, checkGameOver, isGameOver, showHelp]);
 
     // Nieuw spel starten
     const handleNewGame = useCallback(() => {
@@ -410,13 +407,27 @@ function App() {
         setBoard(initialBoard);
         setScore(0);
         setIsGameOver(false);
+        setShowHelp(false); // Sluit helpscherm bij nieuw spel
     }, [initializeBoard, addNewElement]);
+
+    // Functie om helpscherm te tonen/verbergen
+    const toggleHelp = useCallback(() => {
+        setShowHelp(prev => !prev);
+    }, []);
 
     // --- Input Handlers ---
 
     // Toetsenbord Input Handler
     useEffect(() => {
         const handleKeyDown = (event) => {
+            // Laat arrow keys werken, tenzij help scherm open is
+            if (showHelp) {
+                if (event.key === 'Escape') { // Sta ESC toe om help te sluiten
+                    setShowHelp(false);
+                }
+                return; // Geen andere toetsen verwerken als help open is
+            }
+
             switch (event.key) {
                 case 'ArrowUp':
                     event.preventDefault(); // Voorkom paginarollen
@@ -434,6 +445,14 @@ function App() {
                     event.preventDefault();
                     applyMove('right');
                     break;
+                case 'h': // 'h' voor help
+                case 'H':
+                    toggleHelp();
+                    break;
+                case 'n': // 'n' voor nieuw spel
+                case 'N':
+                    handleNewGame();
+                    break;
                 default:
                     break;
             }
@@ -441,19 +460,20 @@ function App() {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [applyMove]);
+    }, [applyMove, showHelp, toggleHelp, handleNewGame]);
 
     // Touch/Swipe Input Handler voor mobiel
     const [touchStartX, setTouchStartX] = useState(null);
     const [touchStartY, setTouchStartY] = useState(null);
 
     const handleTouchStart = (event) => {
+        if (showHelp) return; // Geen vegen als help open is
         setTouchStartX(event.touches[0].clientX);
         setTouchStartY(event.touches[0].clientY);
     };
 
     const handleTouchEnd = (event) => {
-        if (touchStartX === null || touchStartY === null) return;
+        if (showHelp || touchStartX === null || touchStartY === null) return;
 
         const touchEndX = event.changedTouches[0].clientX;
         const touchEndY = event.changedTouches[0].clientY;
@@ -491,232 +511,10 @@ function App() {
         <div className="game-wrapper"
              onTouchStart={handleTouchStart}
              onTouchEnd={handleTouchEnd}>
-            {/* Stijlen zijn hier ingebed voor zelfstandigheid van Canvas */}
-            <style>{`
-                .game-wrapper {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    min-height: 100vh;
-                    background-color: #f0f0f0;
-                    font-family: 'Inter', sans-serif; /* Gebruik van Inter volgens instructies */
-                    color: #333;
-                    width: 100vw; /* Volledige viewport breedte */
-                    box-sizing: border-box; /* Inclusief padding en rand in de totale breedte en hoogte van het element */
-                }
 
-                .game-container {
-                    position: relative; /* Voor positionering van het game over overlay */
-                    background-color: #bbada0;
-                    padding: 20px;
-                    border-radius: 12px; /* Afgeronde hoeken */
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-                    text-align: center;
-                    /* Gebruik van flex-eigenschappen om inhoud te centreren */
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center; /* Horizontaal centreren in een kolomindeling */
-                    justify-content: center; /* Verticaal centreren in een kolomindeling */
-                    width: 90%; /* Responsieve breedte */
-                    max-width: 450px; /* Maximale breedte voor grotere schermen */
-                    margin: 20px auto; /* Centreren en marge */
-                    box-sizing: border-box;
-                }
-
-                h1 {
-                    color: #776e65;
-                    margin-bottom: 15px;
-                    font-size: 2em;
-                    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-                }
-
-                .score {
-                    font-size: 1.8em;
-                    font-weight: bold;
-                    margin-bottom: 25px;
-                    color: #6a5e55;
-                    background-color: #eee4da;
-                    padding: 10px 20px;
-                    border-radius: 8px;
-                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-                }
-
-                .game-board {
-                    display: grid;
-                    grid-template-columns: repeat(${GRID_SIZE}, 1fr);
-                    grid-template-rows: repeat(${GRID_SIZE}, 1fr);
-                    gap: 12px; /* Vergrote afstand */
-                    background-color: #cdc1b4;
-                    padding: 15px; /* Vergrote padding */
-                    border-radius: 10px; /* Afgeronde hoeken */
-                    width: clamp(300px, 80vw, 400px); /* Responsief breedtebereik */
-                    height: clamp(300px, 80vw, 400px); /* Vierkant houden, overeenkomend met breedte */
-                    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
-                    /* Geen margin: auto hier, ouder flexbox beheert centreren */
-                }
-
-                .board-row {
-                    display: contents; /* Zorgt ervoor dat tegels directe kinderen van de grid zijn */
-                }
-
-                .tile {
-                    width: 100%;
-                    height: 100%;
-                    background-color: #eee4da;
-                    border-radius: 8px; /* Meer afgeronde hoeken */
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
-                    font-weight: bold;
-                    font-size: clamp(0.8em, 4vw, 2em); /* Responsieve lettergrootte */
-                    color: #776e65;
-                    box-sizing: border-box;
-                    padding: 5px;
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                    transition: transform 0.1s ease-out, background-color 0.1s ease; /* Basisovergang voor feedback */
-                }
-
-                .tile:active {
-                    transform: scale(0.95); /* Klein drukeffect bij tikken/klikken */
-                }
-
-                .tile.empty {
-                    background-color: rgba(238, 228, 218, 0.35);
-                }
-
-                .tile .atomic-number,
-                .tile .symbol,
-                .tile .name {
-                    margin: 0; /* Zorgt ervoor dat er geen standaardmarges zijn die inhoud verschuiven */
-                    padding: 0; /* Zorgt ervoor dat er geen standaardpadding is die inhoud verschuiven */
-                    line-height: 1.2; /* Iets genereuzere lijnhoogte voor leesbaarheid */
-                    min-height: 1.2em; /* Zorg voor een minimale hoogte voor elke tekstregel */
-                    transition: opacity 0.1s ease-in-out; /* Vloeiende overgang voor transparantie */
-                }
-                .tile .atomic-number {
-                    font-size: 0.6em;
-                }
-
-                .tile .symbol {
-                    font-size: 1.2em;
-                }
-
-                .tile .name {
-                    font-size: 0.4em;
-                    color: #8d8376;
-                }
-
-                p {
-                    margin-top: 25px;
-                    font-size: 1em;
-                    color: #776e65;
-                }
-
-                strong {
-                    color: #6a5e55;
-                }
-
-                .game-over-overlay {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background-color: rgba(238, 228, 218, 0.7); /* Semi-transparante overlay */
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    z-index: 10;
-                    border-radius: 12px; /* Overeenkomen met container */
-                }
-
-                .game-over-message {
-                    background-color: #fcf6e6; /* Lichtere achtergrond voor berichtvak */
-                    padding: 30px;
-                    border-radius: 12px;
-                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-                    text-align: center;
-                    color: #776e65;
-                    max-width: 80%; /* Responsieve breedte */
-                }
-
-                .game-over-message h2 {
-                    font-size: 2.5em;
-                    margin-bottom: 15px;
-                    color: #776e65;
-                }
-
-                .game-over-message p {
-                    font-size: 1.2em;
-                    margin-bottom: 20px;
-                }
-
-                .game-over-message button, .new-game-button {
-                    background-color: #8f7a66;
-                    color: #f9f6f2;
-                    padding: 12px 25px;
-                    border: none;
-                    border-radius: 8px;
-                    font-size: 1.1em;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: background-color 0.2s ease, transform 0.1s ease;
-                    box-shadow: 0 3px 5px rgba(0,0,0,0.2);
-                    margin-top: 20px; /* Voor de nieuwe spelknop onder het bord */
-                }
-
-                .game-over-message button:hover, .new-game-button:hover {
-                    background-color: #6d5848;
-                    transform: translateY(-2px);
-                }
-
-                .game-over-message button:active, .new-game-button:active {
-                    transform: translateY(0);
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-                }
-
-                .new-game-button {
-                    display: block; /* Zorgt ervoor dat het de volledige breedte onder het bord inneemt indien nodig */
-                    margin: 25px auto 0 auto; /* Centreer het onder het bord */
-                    width: fit-content;
-                }
-
-                /* Responsieve aanpassingen voor kleinere schermen */
-                @media (max-width: 600px) {
-                    .game-container {
-                        padding: 15px;
-                        margin: 10px auto;
-                    }
-                    h1 {
-                        font-size: 1.8em;
-                    }
-                    .score {
-                        font-size: 1.3em;
-                        padding: 8px 15px;
-                    }
-                    .game-board {
-                        gap: 8px;
-                        padding: 10px;
-                    }
-                    .tile {
-                        font-size: clamp(0.7em, 3.5vw, 1.8em);
-                    }
-                    p {
-                        font-size: 0.85em;
-                    }
-                    .game-over-message h2 {
-                        font-size: 2em;
-                    }
-                    .game-over-message p {
-                        font-size: 1em;
-                    }
-                }
-            `}</style>
             <div className="game-container">
-                <h1>Elemental Merge</h1> 
+                <h1>Elementen Samenvoegen</h1> 
                 <div className="score">Score: {score}</div> 
-                {/* Changed the .game-board's margin to 0 and centered via game-container's align-items */}
                 <div className="game-board">
                     {board.map((row, rowIndex) => (
                         <div key={rowIndex} className="board-row">
@@ -727,13 +525,40 @@ function App() {
                     ))}
                 </div>
                 <p>Gebruik <strong>Pijltjestoetsen</strong> of <strong>Vegen</strong> om te spelen!</p> 
-                <button className="new-game-button" onClick={handleNewGame}>Nieuw Spel</button> 
+                <div className="button-container">
+                    <button className="new-game-button" onClick={handleNewGame}>Nieuw Spel</button> 
+                    <button className="help-button" onClick={() => setShowHelp(true)}>Help</button>
+                </div>
+
                 {isGameOver && (
                     <div className="game-over-overlay">
                         <div className="game-over-message">
                             <h2>Spel Voorbij!</h2> 
                             <p>Je eindscore: {score}</p> 
                             <button onClick={handleNewGame}>Nieuw Spel</button> 
+                        </div>
+                    </div>
+                )}
+
+                {showHelp && (
+                    <div className="help-overlay">
+                        <div className="help-content">
+                            <h2>Hoe te Spelen</h2>
+                            <p>
+                                Welkom bij Elementen Samenvoegen! Dit is een 2048-achtig spel
+                                waarbij je elementen combineert om zwaardere elementen te vormen.
+                            </p>
+                            <h3>Spelregels:</h3>
+                            <ul>
+                                <li>Gebruik de <strong>Pijltjestoetsen</strong> (omhoog, omlaag, links, rechts) op je toetsenbord, of <strong>Vegen</strong> op mobiel, om alle tegels in die richting te verplaatsen.</li>
+                                <li>Wanneer twee tegels met hetzelfde atoomnummer elkaar raken tijdens een beweging, voegen ze samen tot één tegel van het <strong>volgende atoomnummer (N+1)</strong>. Bijvoorbeeld, twee Waterstof (H, 1) tegels worden één Helium (He, 2) tegel.</li>
+                                <li>Na elke zet verschijnt er een nieuwe tegel op een willekeurige lege plek op het bord.</li>
+                                <li>De begintegels zijn Waterstof (H) en Helium (He). Naarmate je zwaardere elementen maakt (bijv. Neon, Natrium), zullen de soorten elementen die verschijnen dynamisch veranderen om je te helpen verder te komen. Er is een kleine kans dat een "vastzittend" lager element verschijnt.</li>
+                                <li>Je scoort punten door elementen samen te voegen. De score is gebaseerd op het atoomnummer van het nieuw gevormde element.</li>
+                                <li>Het spel is voorbij wanneer het bord vol is en er geen mogelijke zetten meer zijn (geen lege plekken en geen aangrenzende tegels die kunnen samensmelten).</li>
+                            </ul>
+                            <p>Veel plezier met spelen!</p>
+                            <button onClick={() => setShowHelp(false)}>Sluiten</button>
                         </div>
                     </div>
                 )}
