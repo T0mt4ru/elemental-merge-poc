@@ -513,7 +513,7 @@ function App() {
              onTouchEnd={handleTouchEnd}>
 
             <div className="game-container">
-                <h1>Elementen Samenvoegen</h1> 
+                <h1>Elemental Merge</h1> 
                 <div className="score">Score: {score}</div> 
                 <div className="game-board">
                     {board.map((row, rowIndex) => (
