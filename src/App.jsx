@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 
 // Define ELEMENTS directly within the component for self-containment in the immersive
@@ -295,24 +295,11 @@ function App() {
     const [playerName, setPlayerName] = useState(''); // State voor spelersnaam input
     const [showScoreSubmission, setShowScoreSubmission] = useState(false); // State voor score indiening modal
 
-    const playerNameInputRef = useRef(null); // Ref voor het invoerveld
-
-    // Effect om focus te zetten op het invoerveld wanneer de modal verschijnt
-    useEffect(() => {
-        if (showScoreSubmission && playerNameInputRef.current) {
-            playerNameInputRef.current.focus();
-        }
-    }, [showScoreSubmission]);
-
     // --- Highscore Functies ---
 
     // Functie om score in te dienen
     const submitScore = useCallback(async (name, finalScore) => {
-        console.log('Poging tot indienen score:', { playerName: name, score: finalScore });
         try {
-            // Belangrijk: Voor Vercel deployment, zullen deze relatieve paden werken.
-            // In sommige lokale ontwikkelomgevingen of Canvas previews kan dit een 'Failed to parse URL' fout geven.
-            // Zorg ervoor dat uw Vercel project de serverless functies correct deployt.
             const response = await fetch('/api/submit-score', {
                 method: 'POST',
                 headers: {
@@ -321,11 +308,10 @@ function App() {
                 body: JSON.stringify({ playerName: name, score: finalScore }),
             });
             const data = await response.json();
-            console.log('Response van submit-score API:', data);
             if (!response.ok) {
-                throw new Error(data.message || `Fout bij indienen score: ${response.status} ${response.statusText}`);
+                throw new Error(data.message || 'Fout bij indienen score');
             }
-            console.log('Score succesvol ingediend:', data);
+            console.log('Score ingediend:', data);
             fetchHighscores(); // Refresh highscores na indiening
         } catch (error) {
             console.error('Fout bij indienen score:', error);
@@ -337,18 +323,13 @@ function App() {
 
     // Functie om highscores op te halen
     const fetchHighscores = useCallback(async () => {
-        console.log('Poging tot ophalen highscores...');
         try {
-            // Belangrijk: Voor Vercel deployment, zullen deze relatieve paden werken.
-            // In sommige lokale ontwikkelomgevingen of Canvas previews kan dit een 'Failed to parse URL' fout geven.
             const response = await fetch('/api/get-highscores');
             const data = await response.json();
-            console.log('Response van get-highscores API:', data);
             if (!response.ok) {
-                throw new Error(data.message || `Fout bij ophalen highscores: ${response.status} ${response.statusText}`);
+                throw new Error(data.message || 'Fout bij ophalen highscores');
             }
             setHighscores(data.highscores);
-            console.log('Highscores succesvol opgehaald:', data.highscores);
         } catch (error) {
             console.error('Fout bij ophalen highscores:', error);
             setHighscores([]); // Reset highscores bij fout
