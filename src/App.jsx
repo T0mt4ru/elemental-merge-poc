@@ -290,6 +290,51 @@ function App() {
     const [score, setScore] = useState(0);
     const [isGameOver, setIsGameOver] = useState(false);
     const [showHelp, setShowHelp] = useState(false); // Nieuwe state voor helpscherm
+    const [showHighscores, setShowHighscores] = useState(false); // State voor highscore overlay
+    const [highscores, setHighscores] = useState([]); // State voor de highscore data
+    const [playerName, setPlayerName] = useState(''); // State voor spelersnaam input
+    const [showScoreSubmission, setShowScoreSubmission] = useState(false); // State voor score indiening modal
+
+    // --- Highscore Functies ---
+
+    // Functie om score in te dienen
+    const submitScore = useCallback(async (name, finalScore) => {
+        try {
+            const response = await fetch('/api/submit-score', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ playerName: name, score: finalScore }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Fout bij indienen score');
+            }
+            console.log('Score ingediend:', data);
+            fetchHighscores(); // Refresh highscores na indiening
+        } catch (error) {
+            console.error('Fout bij indienen score:', error);
+            // Optioneel: toon een foutmelding aan de gebruiker
+        } finally {
+            setShowScoreSubmission(false); // Sluit de indiening modal
+        }
+    }, []);
+
+    // Functie om highscores op te halen
+    const fetchHighscores = useCallback(async () => {
+        try {
+            const response = await fetch('/api/get-highscores');
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Fout bij ophalen highscores');
+            }
+            setHighscores(data.highscores);
+        } catch (error) {
+            console.error('Fout bij ophalen highscores:', error);
+            setHighscores([]); // Reset highscores bij fout
+        }
+    }, []);
 
     // --- Kern Spel Logica ---
 
@@ -351,7 +396,7 @@ function App() {
 
     // Past een beweging (omhoog, omlaag, links, rechts) toe op het hele bord
     const applyMove = useCallback((direction) => {
-        if (isGameOver || showHelp) return; // Voorkom bewegingen als spel voorbij is of help open is
+        if (isGameOver || showHelp || showHighscores || showScoreSubmission) return; // Voorkom bewegingen als spel voorbij is, help open is, highscores open is of score indiening open is
 
         let newBoard = board.map(row => [...row]); // Maak een diepe kopie
         let boardChanged = false;
@@ -394,9 +439,10 @@ function App() {
             // Na het toevoegen van een nieuw element, controleer of het spel voorbij is
             if (checkGameOver(finalBoard)) {
                 setIsGameOver(true);
+                setShowScoreSubmission(true); // Toon score indiening modal
             }
         }
-    }, [board, slideAndMergeLine, addNewElement, checkGameOver, isGameOver, showHelp]);
+    }, [board, slideAndMergeLine, addNewElement, checkGameOver, isGameOver, showHelp, showHighscores, showScoreSubmission]);
 
     // Nieuw spel starten
     const handleNewGame = useCallback(() => {
@@ -407,25 +453,42 @@ function App() {
         setBoard(initialBoard);
         setScore(0);
         setIsGameOver(false);
-        setShowHelp(false); // Sluit helpscherm bij nieuw spel
+        setShowHelp(false);
+        setShowHighscores(false); // Sluit highscores bij nieuw spel
+        setShowScoreSubmission(false); // Sluit score indiening bij nieuw spel
+        setPlayerName(''); // Reset spelersnaam
     }, [initializeBoard, addNewElement]);
 
     // Functie om helpscherm te tonen/verbergen
     const toggleHelp = useCallback(() => {
         setShowHelp(prev => !prev);
+        setShowHighscores(false); // Sluit highscores als help wordt geopend
+        setShowScoreSubmission(false); // Sluit score indiening als help wordt geopend
     }, []);
+
+    // Functie om highscores te tonen/verbergen
+    const toggleHighscores = useCallback(() => {
+        setShowHighscores(prev => !prev);
+        setShowHelp(false); // Sluit help als highscores worden geopend
+        setShowScoreSubmission(false); // Sluit score indiening als highscores worden geopend
+        if (!showHighscores) { // Als we highscores gaan tonen, haal ze dan op
+            fetchHighscores();
+        }
+    }, [showHighscores, fetchHighscores]);
 
     // --- Input Handlers ---
 
     // Toetsenbord Input Handler
     useEffect(() => {
         const handleKeyDown = (event) => {
-            // Laat arrow keys werken, tenzij help scherm open is
-            if (showHelp) {
-                if (event.key === 'Escape') { // Sta ESC toe om help te sluiten
+            // Laat arrow keys werken, tenzij een overlay open is
+            if (showHelp || showHighscores || showScoreSubmission) {
+                if (event.key === 'Escape') { // Sta ESC toe om overlays te sluiten
                     setShowHelp(false);
+                    setShowHighscores(false);
+                    setShowScoreSubmission(false);
                 }
-                return; // Geen andere toetsen verwerken als help open is
+                return; // Geen andere toetsen verwerken als een overlay open is
             }
 
             switch (event.key) {
@@ -453,6 +516,10 @@ function App() {
                 case 'N':
                     handleNewGame();
                     break;
+                case 'l': // 'l' voor highscores (leaderboard)
+                case 'L':
+                    toggleHighscores();
+                    break;
                 default:
                     break;
             }
@@ -460,20 +527,20 @@ function App() {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [applyMove, showHelp, toggleHelp, handleNewGame]);
+    }, [applyMove, showHelp, toggleHelp, handleNewGame, showHighscores, toggleHighscores, showScoreSubmission]);
 
     // Touch/Swipe Input Handler voor mobiel
     const [touchStartX, setTouchStartX] = useState(null);
     const [touchStartY, setTouchStartY] = useState(null);
 
     const handleTouchStart = (event) => {
-        if (showHelp) return; // Geen vegen als help open is
+        if (showHelp || showHighscores || showScoreSubmission) return; // Geen vegen als een overlay open is
         setTouchStartX(event.touches[0].clientX);
         setTouchStartY(event.touches[0].clientY);
     };
 
     const handleTouchEnd = (event) => {
-        if (showHelp || touchStartX === null || touchStartY === null) return;
+        if (showHelp || showHighscores || showScoreSubmission || touchStartX === null || touchStartY === null) return;
 
         const touchEndX = event.changedTouches[0].clientX;
         const touchEndY = event.changedTouches[0].clientY;
