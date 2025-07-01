@@ -586,7 +586,12 @@ function App() {
                     {board.map((row, rowIndex) => (
                         <div key={rowIndex} className="board-row">
                             {row.map((atomicNumber, colIndex) => (
-                                <Tile key={`${rowIndex}-${colIndex}`} atomicNumber={atomicNumber} />
+                                <Tile
+                                    key={`${rowIndex}-${colIndex}`}
+                                    atomicNumber={atomicNumber}
+                                    rowIndex={rowIndex}
+                                    colIndex={colIndex}
+                                />
                             ))}
                         </div>
                     ))}
@@ -594,7 +599,8 @@ function App() {
                 <p>Gebruik <strong>Pijltjestoetsen</strong> of <strong>Vegen</strong> om te spelen!</p> 
                 <div className="button-container">
                     <button className="new-game-button" onClick={handleNewGame}>Nieuw Spel</button> 
-                    <button className="help-button" onClick={() => setShowHelp(true)}>Help</button>
+                    <button className="help-button" onClick={toggleHelp}>Help</button>
+                    <button className="highscore-button" onClick={toggleHighscores}>Highscores</button>
                 </div>
 
                 {isGameOver && (
@@ -626,6 +632,49 @@ function App() {
                             </ul>
                             <p>Veel plezier met spelen!</p>
                             <button onClick={() => setShowHelp(false)}>Sluiten</button>
+                        </div>
+                    </div>
+                )}
+
+                {showHighscores && (
+                    <div className="highscore-overlay">
+                        <div className="highscore-content">
+                            <h2>Top 10 Highscores</h2>
+                            {highscores.length > 0 ? (
+                                <ol>
+                                    {highscores.map((entry, index) => (
+                                        <li key={index}>
+                                            {entry.player_name}: <span>{entry.score}</span>
+                                        </li>
+                                    ))}
+                                </ol>
+                            ) : (
+                                <p>Laden highscores of geen scores beschikbaar...</p>
+                            )}
+                            <button onClick={() => setShowHighscores(false)}>Sluiten</button>
+                        </div>
+                    </div>
+                )}
+
+                {showScoreSubmission && (
+                    <div className="score-submission-overlay">
+                        <div className="score-submission-content">
+                            <h2>Je hebt een nieuwe highscore!</h2>
+                            <p>Je score: {score}</p>
+                            <input
+                                type="text"
+                                placeholder="Voer je naam in"
+                                value={playerName}
+                                onChange={(e) => setPlayerName(e.target.value)}
+                                maxLength="15" // Beperk de lengte van de naam
+                            />
+                            <button
+                                onClick={() => submitScore(playerName, score)}
+                                disabled={playerName.trim() === ''}
+                            >
+                                Score Indienen
+                            </button>
+                            <button onClick={() => setShowScoreSubmission(false)}>Annuleren</button>
                         </div>
                     </div>
                 )}
