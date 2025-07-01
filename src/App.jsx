@@ -578,9 +578,8 @@ function App() {
         <div className="game-wrapper"
              onTouchStart={handleTouchStart}
              onTouchEnd={handleTouchEnd}>
-
             <div className="game-container">
-                <h1>Elemental Merge</h1> 
+                <h1>Elemenntal Merge</h1> 
                 <div className="score">Score: {score}</div> 
                 <div className="game-board">
                     {board.map((row, rowIndex) => (
@@ -603,7 +602,7 @@ function App() {
                     <button className="highscore-button" onClick={toggleHighscores}>Highscores</button>
                 </div>
 
-                {isGameOver && (
+                {isGameOver && !showScoreSubmission && (
                     <div className="game-over-overlay">
                         <div className="game-over-message">
                             <h2>Spel Voorbij!</h2> 
