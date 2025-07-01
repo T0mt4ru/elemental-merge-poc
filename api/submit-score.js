@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import Filter from 'bad-words'; // Correcte import voor bad-words
+import { Filter } from 'bad-words'; // Correcte import voor bad-words
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
