@@ -1,4 +1,11 @@
-.game-wrapper {
+html, body, #root {
+                    height: 100%;
+                    margin: 0;
+                    overflow: hidden; /* Voorkomt algemeen scrollen van de pagina */
+                    overscroll-behavior-y: contain; /* Voorkomt pull-to-refresh op de meeste browsers */
+                }
+
+                .game-wrapper {
                     display: flex;
                     justify-content: center;
                     align-items: center;
@@ -8,6 +15,7 @@
                     color: #333;
                     width: 100vw; /* Volledige viewport breedte */
                     box-sizing: border-box; /* Inclusief padding en rand in de totale breedte en hoogte van het element */
+                    touch-action: none; /* Voorkomt standaard browser touch acties zoals scrollen en zoom */
                 }
 
                 .game-container {
