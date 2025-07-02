@@ -295,11 +295,24 @@ function App() {
     const [playerName, setPlayerName] = useState(''); // State voor spelersnaam input
     const [showScoreSubmission, setShowScoreSubmission] = useState(false); // State voor score indiening modal
 
+    const playerNameInputRef = useRef(null); // Ref voor het invoerveld
+
+    // Effect om focus te zetten op het invoerveld wanneer de modal verschijnt
+    useEffect(() => {
+        if (showScoreSubmission && playerNameInputRef.current) {
+            playerNameInputRef.current.focus();
+        }
+    }, [showScoreSubmission]);
+
     // --- Highscore Functies ---
 
     // Functie om score in te dienen
     const submitScore = useCallback(async (name, finalScore) => {
+        console.log('Poging tot indienen score met naam:', name, 'en score:', finalScore); // Toegevoegd voor debugging
         try {
+            // Belangrijk: Voor Vercel deployment, zullen deze relatieve paden werken.
+            // In sommige lokale ontwikkelomgevingen of Canvas previews kan dit een 'Failed to parse URL' fout geven.
+            // Zorg ervoor dat uw Vercel project de serverless functies correct deployt.
             const response = await fetch('/api/submit-score', {
                 method: 'POST',
                 headers: {
@@ -308,10 +321,11 @@ function App() {
                 body: JSON.stringify({ playerName: name, score: finalScore }),
             });
             const data = await response.json();
+            console.log('Response van submit-score API:', data);
             if (!response.ok) {
-                throw new Error(data.message || 'Fout bij indienen score');
+                throw new Error(data.message || `Fout bij indienen score: ${response.status} ${response.statusText}`);
             }
-            console.log('Score ingediend:', data);
+            console.log('Score succesvol ingediend:', data);
             fetchHighscores(); // Refresh highscores na indiening
         } catch (error) {
             console.error('Fout bij indienen score:', error);
@@ -323,13 +337,18 @@ function App() {
 
     // Functie om highscores op te halen
     const fetchHighscores = useCallback(async () => {
+        console.log('Poging tot ophalen highscores...');
         try {
+            // Belangrijk: Voor Vercel deployment, zullen deze relatieve paden werken.
+            // In sommige lokale ontwikkelomgevingen of Canvas previews kan dit een 'Failed to parse URL' fout geven.
             const response = await fetch('/api/get-highscores');
             const data = await response.json();
+            console.log('Response van get-highscores API:', data);
             if (!response.ok) {
-                throw new Error(data.message || 'Fout bij ophalen highscores');
+                throw new Error(data.message || `Fout bij ophalen highscores: ${response.status} ${response.statusText}`);
             }
             setHighscores(data.highscores);
+            console.log('Highscores succesvol opgehaald:', data.highscores);
         } catch (error) {
             console.error('Fout bij ophalen highscores:', error);
             setHighscores([]); // Reset highscores bij fout
@@ -532,12 +551,39 @@ function App() {
     // Touch/Swipe Input Handler voor mobiel
     const [touchStartX, setTouchStartX] = useState(null);
     const [touchStartY, setTouchStartY] = useState(null);
+    // Voeg een state toe om te volgen of een veeg is begonnen en we preventDefault moeten doen
+    const [isSwiping, setIsSwiping] = useState(false);
+    const minSwipeDistance = 30; // Minimale pixelafstand voor een veeg om te registreren
+    const swipeThreshold = 10; // Extra kleine drempel om preventDefault eerder te activeren
 
     const handleTouchStart = (event) => {
         if (showHelp || showHighscores || showScoreSubmission) return; // Geen vegen als een overlay open is
         setTouchStartX(event.touches[0].clientX);
         setTouchStartY(event.touches[0].clientY);
+        setIsSwiping(false); // Reset bij start van nieuwe aanraking
     };
+
+    const handleTouchMove = (event) => {
+        if (showHelp || showHighscores || showScoreSubmission || touchStartX === null || touchStartY === null) return;
+
+        const touchCurrentX = event.touches[0].clientX;
+        const touchCurrentY = event.touches[0].clientY;
+
+        const dx = touchCurrentX - touchStartX;
+        const dy = touchCurrentY - touchStartY;
+
+        // Als de beweging significant genoeg is om als veeg te worden beschouwd
+        // en de veeg nog niet als 'swiping' is gemarkeerd, voorkom dan standaardgedrag
+        if ((Math.abs(dx) > swipeThreshold || Math.abs(dy) > swipeThreshold) && !isSwiping) {
+            setIsSwiping(true);
+        }
+        
+        // Voorkom standaard scrollgedrag zodra een veegbeweging duidelijk wordt
+        if (isSwiping) {
+            event.preventDefault();
+        }
+    };
+
 
     const handleTouchEnd = (event) => {
         if (showHelp || showHighscores || showScoreSubmission || touchStartX === null || touchStartY === null) return;
@@ -546,37 +592,33 @@ function App() {
         const touchEndY = event.changedTouches[0].clientY;
 
         const dx = touchEndX - touchStartX;
-        const dy = touchEndY - touchStartY - 20; // Lichte verticale offset toegevoegd om onbedoeld verticaal scrollen te voorkomen
+        const dy = touchEndY - touchStartY; // Geen offset meer hier, omdat preventDefault eerder gebeurt
 
         // Bepaal of het een horizontale of verticale veeg is, en of deze significant genoeg is
-        const minSwipeDistance = 30; // Minimale pixelafstand voor een veeg om te registreren
         if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > minSwipeDistance) { // Horizontale veeg
             if (dx > 0) { // Naar rechts geveegd
-                event.preventDefault(); // Voorkom paginarollen
                 applyMove('right');
             } else { // Naar links geveegd
-                event.preventDefault(); // Voorkom paginarollen
                 applyMove('left');
             }
         } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > minSwipeDistance) { // Verticale veeg
             if (dy > 0) { // Naar beneden geveegd
-                event.preventDefault(); // Voorkom paginarollen
                 applyMove('down');
             } else { // Naar boven geveegd
-                event.preventDefault(); // Voorkom paginarollen
                 applyMove('up');
             }
         }
 
-        // Reset touchcoördinaten
+        // Reset touchcoördinaten en swiping state
         setTouchStartX(null);
         setTouchStartY(null);
+        setIsSwiping(false);
     };
 
-
-    return (
+    return(
         <div className="game-wrapper"
              onTouchStart={handleTouchStart}
+             onTouchMove={handleTouchMove}
              onTouchEnd={handleTouchEnd}>
             <div className="game-container">
                 <h1>Elemental Merge</h1> 
